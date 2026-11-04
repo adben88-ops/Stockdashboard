@@ -1,0 +1,12 @@
+// 1. Format table data into comma-separated text lines
+const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+
+// 2. Wrap the text in a binary Blob
+const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+// 3. Create a temporary link and trigger a synthetic click to download
+const url = URL.createObjectURL(blob);
+const link = document.createElement('a');
+link.setAttribute('href', url);
+link.setAttribute('download', 'IDX_StockPulse_Watchlist.csv');
+link.click();
