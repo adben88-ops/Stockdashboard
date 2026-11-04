@@ -1,44 +1,253 @@
-// 1. Format table data into comma-separated text lines
-const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-
-// 2. Wrap the text in a binary Blob
-const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-
-// 3. Create a temporary link and trigger a synthetic click to download
-const url = URL.createObjectURL(blob);
-const link = document.createElement('a');
-link.setAttribute('href', url);
-link.setAttribute('download', 'IDX_StockPulse_Watchlist.csv');
-link.click();<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IDX StockPulse Watchlist</title>
+  <title>IDX Swing Watchlist Dashboard</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    /* Tambahkan style CSS di sini */
+    :root {
+      --bg-dark: #0f172a;
+      --card-bg: #1e293b;
+      --border-color: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-green: #22c55e;
+      --accent-red: #ef4444;
+      --accent-blue: #38bdf8;
+      --hover-bg: #2d3748;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      padding: 24px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    button {
+      background-color: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 10px 18px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #1d4ed8;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow-x: auto;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.875rem;
+    }
+
+    th {
+      background-color: #111827;
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 14px 16px;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background-color: var(--hover-bg);
+    }
+
+    .ticker {
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-buy {
+      background-color: rgba(34, 197, 94, 0.15);
+      color: var(--accent-green);
+    }
+
+    .badge-wait {
+      background-color: rgba(234, 179, 8, 0.15);
+      color: #facc15;
+    }
+
+    .text-green { color: var(--accent-green); }
+    .text-red { color: var(--accent-red); }
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
   </style>
 </head>
 <body>
 
-  <!-- Bagian Tampilan Dashboard / Tabel / Tombol Download -->
-  <h1>IDX StockPulse Watchlist</h1>
-  <button id="downloadBtn">Export CSV</button>
+  <div class="container">
+    <header>
+      <div>
+        <h1>IDX Stock Watchlist & Plan</h1>
+        <p style="color: var(--text-muted); font-size: 0.875rem;">Daily Trading Plan & Swing Watchlist</p>
+      </div>
+      <div class="actions">
+        <button id="exportCsvBtn">
+          Unduh Watchlist (CSV)
+        </button>
+      </div>
+    </header>
+
+    <div class="card">
+      <table id="watchlistTable">
+        <thead>
+          <tr>
+            <th>Kode</th>
+            <th>Setup / Sinyal</th>
+            <th class="text-right">Entry Plan</th>
+            <th class="text-right">Stop Loss (SL)</th>
+            <th class="text-right">Target (TP)</th>
+            <th class="text-right">Risk/Reward</th>
+            <th class="text-center">Status</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- Data di-render dinamis via JavaScript -->
+        </tbody>
+      </table>
+    </div>
+  </div>
 
   <script>
-    // Taruh script JavaScript Anda di dalam sini
-    const headers = ["Ticker", "Price", "Action"];
-    const rows = [["BBCA", "10000", "Buy"], ["BMRI", "6500", "Hold"]];
+    // Data watchlist - Anda bisa ubah atau tambah data di array ini
+    const watchlistData = [
+      { ticker: "BBCA", setup: "Pullback EMA / Support", entry: 10150, sl: 9900, tp: 10650, status: "Buy Limit" },
+      { ticker: "BMRI", setup: "Breakout Cup & Handle", entry: 6450, sl: 6250, tp: 6850, status: "Wait Retest" },
+      { ticker: "BRIS", setup: "Ichimoku Kumo Breakout", entry: 2850, sl: 2720, tp: 3110, status: "Buy Limit" },
+      { ticker: "MEDC", setup: "Volume Spike Rebound", entry: 1280, sl: 1230, tp: 1380, status: "Wait Retest" },
+      { ticker: "ANTM", setup: "Range Bound Acc", entry: 1540, sl: 1485, tp: 1650, status: "Buy Limit" }
+    ];
 
-    document.getElementById('downloadBtn').addEventListener('click', () => {
-      const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    // Fungsi format angka ke format Rupiah / Ribuan
+    function formatNumber(num) {
+      return new Intl.NumberFormat('id-ID').format(num);
+    }
+
+    // Render tabel HTML
+    const tableBody = document.getElementById('tableBody');
+    tableBody.innerHTML = watchlistData.map(item => {
+      const risk = item.entry - item.sl;
+      const reward = item.tp - item.entry;
+      const rrRatio = (reward / risk).toFixed(2);
+      const badgeClass = item.status.includes('Buy') ? 'badge-buy' : 'badge-wait';
+
+      return `
+        <tr>
+          <td class="ticker">${item.ticker}</td>
+          <td>${item.setup}</td>
+          <td class="text-right">${formatNumber(item.entry)}</td>
+          <td class="text-right text-red">${formatNumber(item.sl)}</td>
+          <td class="text-right text-green">${formatNumber(item.tp)}</td>
+          <td class="text-right">1 : ${rrRatio}</td>
+          <td class="text-center"><span class="badge ${badgeClass}">${item.status}</span></td>
+        </tr>
+      `;
+    }).join('');
+
+    // Fungsi Export Tabel ke CSV
+    document.getElementById('exportCsvBtn').addEventListener('click', function () {
+      const headers = ["Ticker", "Setup", "Entry", "StopLoss", "TargetPrice", "RiskReward", "Status"];
+      
+      const rows = watchlistData.map(item => {
+        const risk = item.entry - item.sl;
+        const reward = item.tp - item.entry;
+        const rr = `1:${(reward / risk).toFixed(2)}`;
+        return [
+          item.ticker,
+          `"${item.setup}"`,
+          item.entry,
+          item.sl,
+          item.tp,
+          rr,
+          item.status
+        ].join(',');
+      });
+
+      const csvContent = [headers.join(','), ...rows].join('\r\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.setAttribute('href', url);
-      link.setAttribute('download', 'IDX_StockPulse_Watchlist.csv');
-      link.click();
+      
+      const today = new Date().toISOString().slice(0, 10);
+      const downloadLink = document.createElement('a');
+      downloadLink.href = url;
+      downloadLink.download = `IDX_Watchlist_${today}.csv`;
+      
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      URL.revokeObjectURL(url);
     });
   </script>
 </body>
