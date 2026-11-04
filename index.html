@@ -9,4 +9,37 @@ const url = URL.createObjectURL(blob);
 const link = document.createElement('a');
 link.setAttribute('href', url);
 link.setAttribute('download', 'IDX_StockPulse_Watchlist.csv');
-link.click();
+link.click();<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IDX StockPulse Watchlist</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    /* Tambahkan style CSS di sini */
+  </style>
+</head>
+<body>
+
+  <!-- Bagian Tampilan Dashboard / Tabel / Tombol Download -->
+  <h1>IDX StockPulse Watchlist</h1>
+  <button id="downloadBtn">Export CSV</button>
+
+  <script>
+    // Taruh script JavaScript Anda di dalam sini
+    const headers = ["Ticker", "Price", "Action"];
+    const rows = [["BBCA", "10000", "Buy"], ["BMRI", "6500", "Hold"]];
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'IDX_StockPulse_Watchlist.csv');
+      link.click();
+    });
+  </script>
+</body>
+</html>
